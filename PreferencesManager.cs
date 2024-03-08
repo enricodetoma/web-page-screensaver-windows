@@ -136,6 +136,7 @@
                 // for the GET operation, the last effective screen has the URLS
                 // for additional screens in prefs appended to it's list.
                 List<string> urlsList = urlsByScreen[startAtScreenNum].ToList();
+                urlsList = urlsList.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
                 var urlsForRestOfScreens = urlsByScreen.GetRange(startAtScreenNum + 1, urlsByScreen.Count - startAtScreenNum - 1);
                 foreach (var additionalScreenUrls in urlsForRestOfScreens)
                 {

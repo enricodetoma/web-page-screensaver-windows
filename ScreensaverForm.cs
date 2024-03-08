@@ -20,6 +20,7 @@ namespace Miceli.Web_Page_Screensaver
         private GlobalUserEventHandler userEventHandler;
         private bool shuffleOrder;
         private List<string> urls;
+        private bool closing = false;
 
         private PreferencesManager prefsManager = new PreferencesManager();
 
@@ -95,6 +96,9 @@ namespace Miceli.Web_Page_Screensaver
 
         private void BrowseTo(string url)
         {
+            if (closing)
+                return;
+
             // Disable the user event handler while navigating
             Application.RemoveMessageFilter(userEventHandler);
 
@@ -134,10 +138,11 @@ namespace Miceli.Web_Page_Screensaver
 
         private void HandleUserActivity()
         {
-            if (StartTime.AddSeconds(1) > DateTime.Now) return;
+            if (StartTime.AddSeconds(5) > DateTime.Now) return;
 
             if (prefsManager.CloseOnActivity)
             {
+                closing = true;
                 Close();
             }
             else
@@ -161,18 +166,35 @@ namespace Miceli.Web_Page_Screensaver
         private const int WM_MBUTTONDBLCLK = 0x209;
         private const int WM_KEYDOWN = 0x100;
         private const int WM_KEYUP = 0x101;
+        private const int WM_TIMER = 0x0113;
+        private const int WM_USER = 0x400;
 
         // screensavers and especially multi-window apps can get spurrious WM_MOUSEMOVE events
         // that don't actually involve any movement (cursor chnages and some mouse driver software
         // can generate them, for example) - so we record the actual mouse position and compare against it for actual movement.
-        //private Point? lastMousePos;
+        private Point? lastMousePos;
 
         public event UserEvent Event;
 
         public bool PreFilterMessage(ref Message m)
         {
+            if ((m.Msg == WM_MOUSEMOVE) && (this.lastMousePos == null))
+            {
+                this.lastMousePos = Cursor.Position;
+            }
 
-            Event?.Invoke();
+            if (m.Msg >= WM_MOUSEMOVE && m.Msg <= WM_MBUTTONDBLCLK)
+            {
+                if (((m.Msg == WM_MOUSEMOVE) && (Cursor.Position != this.lastMousePos))
+                    || (m.Msg > WM_MOUSEMOVE && m.Msg <= WM_MBUTTONDBLCLK) || m.Msg == WM_KEYDOWN || m.Msg == WM_KEYUP)
+                {
+                    Event?.Invoke();
+                }
+            }
+            else if (m.Msg != WM_TIMER && m.Msg < WM_USER)
+            {
+                Event?.Invoke();
+            }
 
             return false;
         }

@@ -44,8 +44,6 @@ namespace Miceli.Web_Page_Screensaver
                         Size = new Size(screen.Bounds.Width, screen.Bounds.Height)
                     };
 
-                    FormStartPosition x = screensaverForm.StartPosition;
-
                     formsList.Add(screensaverForm);
                 }
 
