@@ -9,6 +9,8 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using System.Diagnostics;
 using Microsoft.Web.WebView2;
+using Microsoft.Web.WebView2.Core;
+using System.IO;
 
 namespace Miceli.Web_Page_Screensaver
 {
@@ -29,6 +31,14 @@ namespace Miceli.Web_Page_Screensaver
         [ThreadStatic]
         private static Random random;
 
+        async void InitializeWebView()
+        {
+            // Specify temporary folder for web view
+            string UserDataFolder = Path.Combine(Path.GetTempPath(), "Web-Page-Screensaver");
+            var env = await CoreWebView2Environment.CreateAsync(userDataFolder: UserDataFolder);
+            await webView1.EnsureCoreWebView2Async(env);
+        }
+
         public ScreensaverForm(int? screenNumber = null)
         {
             userEventHandler = new GlobalUserEventHandler();
@@ -38,6 +48,8 @@ namespace Miceli.Web_Page_Screensaver
             else screenNum = (int)screenNumber;
 
             InitializeComponent();
+
+            InitializeWebView();
 
             Cursor.Hide();
         }
